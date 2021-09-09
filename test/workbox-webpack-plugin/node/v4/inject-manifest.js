@@ -18,8 +18,10 @@ try {
 }
 const upath = require('upath');
 const moduleAlias = require('module-alias');
-moduleAlias.addAlias('html-webpack-plugin', upath.resolve('node_modules',
-    'html-webpack-plugin-v4'));
+moduleAlias.addAlias(
+  'html-webpack-plugin',
+  upath.resolve('node_modules', 'html-webpack-plugin-v4'),
+);
 moduleAlias.addAlias('webpack', upath.resolve('node_modules', 'webpack-v4'));
 
 const chai = require('chai');
@@ -35,18 +37,26 @@ const WorkerPlugin = require('worker-plugin');
 const CreateWebpackAssetPlugin = require('./lib/create-webpack-asset-plugin');
 const validateServiceWorkerRuntime = require('../../../../infra/testing/validator/service-worker-runtime');
 const webpackBuildCheck = require('../../../../infra/testing/webpack-build-check');
-const {InjectManifest} = require('../../../../packages/workbox-webpack-plugin/src/index');
+const {
+  InjectManifest,
+} = require('../../../../packages/workbox-webpack-plugin/src/index');
 
 chai.use(chaiMatchPattern);
 const {expect} = chai;
 
-describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
+describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function () {
   const WEBPACK_ENTRY_FILENAME = 'webpackEntry.js';
-  const SRC_DIR = upath.join(__dirname, '..', '..', 'static', 'example-project-1');
+  const SRC_DIR = upath.join(
+    __dirname,
+    '..',
+    '..',
+    'static',
+    'example-project-1',
+  );
   const SW_SRC = upath.join(__dirname, '..', '..', 'static', 'sw-src.js');
 
-  describe(`[workbox-webpack-plugin] Runtime errors`, function() {
-    it(`should lead to a webpack compilation error when passed invalid config`, function(done) {
+  describe(`[workbox-webpack-plugin] Runtime errors`, function () {
+    it(`should lead to a webpack compilation error when passed invalid config`, function (done) {
       const outputDir = tempy.directory();
       const config = {
         mode: 'production',
@@ -72,7 +82,7 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
           const statsJson = stats.toJson();
           expect(statsJson.warnings).to.be.empty;
           expect(statsJson.errors).to.have.members([
-            `Please check your InjectManifest plugin configuration:\n"invalid" is not allowed`,
+            `Please check your InjectManifest plugin configuration:\n[WebpackInjectManifest] 'invalid' property is not expected to be here. Did you mean property 'include'?`,
           ]);
 
           done();
@@ -82,7 +92,7 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
       });
     });
 
-    it(`should lead to a webpack compilation error when the swSrc contains multiple injection points`, function(done) {
+    it(`should lead to a webpack compilation error when the swSrc contains multiple injection points`, function (done) {
       const outputDir = tempy.directory();
       const config = {
         mode: 'production',
@@ -95,7 +105,13 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
         },
         plugins: [
           new InjectManifest({
-            swSrc: upath.join(__dirname, '..', '..', 'static', 'bad-multiple-injection.js'),
+            swSrc: upath.join(
+              __dirname,
+              '..',
+              '..',
+              'static',
+              'bad-multiple-injection.js',
+            ),
           }),
         ],
       };
@@ -118,8 +134,8 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
     });
   });
 
-  describe(`[workbox-webpack-plugin] Multiple chunks`, function() {
-    it(`should work when called without any parameters`, function(done) {
+  describe(`[workbox-webpack-plugin] Multiple chunks`, function () {
+    it(`should work when called without any parameters`, function (done) {
       const outputDir = tempy.directory();
       const config = {
         mode: 'production',
@@ -152,15 +168,21 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
             swFile,
             entryPoint: 'injectManifest',
             expectedMethodCalls: {
-              precacheAndRoute: [[[
-                {
-                  revision: null,
-                  url: /^entry1-[0-9a-f]{20}\.js$/,
-                }, {
-                  revision: null,
-                  url: /^entry2-[0-9a-f]{20}\.js$/,
-                },
-              ], {}]],
+              precacheAndRoute: [
+                [
+                  [
+                    {
+                      revision: null,
+                      url: /^entry1-[0-9a-f]{20}\.js$/,
+                    },
+                    {
+                      revision: null,
+                      url: /^entry2-[0-9a-f]{20}\.js$/,
+                    },
+                  ],
+                  {},
+                ],
+              ],
             },
           });
 
@@ -171,7 +193,7 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
       });
     });
 
-    it(`should honor the 'chunks' allowlist config`, function(done) {
+    it(`should honor the 'chunks' allowlist config`, function (done) {
       const outputDir = tempy.directory();
       const config = {
         mode: 'production',
@@ -206,15 +228,21 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
             swFile,
             entryPoint: 'injectManifest',
             expectedMethodCalls: {
-              precacheAndRoute: [[[
-                {
-                  revision: null,
-                  url: /^entry1-[0-9a-f]{20}\.js$/,
-                }, {
-                  revision: null,
-                  url: /^entry2-[0-9a-f]{20}\.js$/,
-                },
-              ], {}]],
+              precacheAndRoute: [
+                [
+                  [
+                    {
+                      revision: null,
+                      url: /^entry1-[0-9a-f]{20}\.js$/,
+                    },
+                    {
+                      revision: null,
+                      url: /^entry2-[0-9a-f]{20}\.js$/,
+                    },
+                  ],
+                  {},
+                ],
+              ],
             },
           });
 
@@ -225,7 +253,7 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
       });
     });
 
-    it(`should honor the 'chunks' allowlist config, including children created via SplitChunksPlugin`, function(done) {
+    it(`should honor the 'chunks' allowlist config, including children created via SplitChunksPlugin`, function (done) {
       const outputDir = tempy.directory();
       const config = {
         mode: 'production',
@@ -264,15 +292,21 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
             swFile,
             entryPoint: 'injectManifest',
             expectedMethodCalls: {
-              precacheAndRoute: [[[
-                {
-                  revision: /^[0-9a-f]{32}$/,
-                  url: 'main.js',
-                }, {
-                  revision: /^[0-9a-f]{32}$/,
-                  url: 'vendors~main.js',
-                },
-              ], {}]],
+              precacheAndRoute: [
+                [
+                  [
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'main.js',
+                    },
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'vendors~main.js',
+                    },
+                  ],
+                  {},
+                ],
+              ],
             },
           });
 
@@ -283,7 +317,7 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
       });
     });
 
-    it(`should honor the 'excludeChunks' denylist config`, function(done) {
+    it(`should honor the 'excludeChunks' denylist config`, function (done) {
       const outputDir = tempy.directory();
       const config = {
         mode: 'production',
@@ -318,15 +352,21 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
             swFile,
             entryPoint: 'injectManifest',
             expectedMethodCalls: {
-              precacheAndRoute: [[[
-                {
-                  revision: null,
-                  url: /^entry1-[0-9a-f]{20}\.js$/,
-                }, {
-                  revision: null,
-                  url: /^entry2-[0-9a-f]{20}\.js$/,
-                },
-              ], {}]],
+              precacheAndRoute: [
+                [
+                  [
+                    {
+                      revision: null,
+                      url: /^entry1-[0-9a-f]{20}\.js$/,
+                    },
+                    {
+                      revision: null,
+                      url: /^entry2-[0-9a-f]{20}\.js$/,
+                    },
+                  ],
+                  {},
+                ],
+              ],
             },
           });
 
@@ -337,7 +377,7 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
       });
     });
 
-    it(`should honor setting both the 'chunks' and 'excludeChunks', with the denylist taking precedence`, function(done) {
+    it(`should honor setting both the 'chunks' and 'excludeChunks', with the denylist taking precedence`, function (done) {
       const outputDir = tempy.directory();
       const config = {
         mode: 'production',
@@ -373,12 +413,17 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
             swFile,
             entryPoint: 'injectManifest',
             expectedMethodCalls: {
-              precacheAndRoute: [[[
-                {
-                  revision: null,
-                  url: /^entry1-[0-9a-f]{20}\.js$/,
-                },
-              ], {}]],
+              precacheAndRoute: [
+                [
+                  [
+                    {
+                      revision: null,
+                      url: /^entry1-[0-9a-f]{20}\.js$/,
+                    },
+                  ],
+                  {},
+                ],
+              ],
             },
           });
 
@@ -390,8 +435,8 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
     });
   });
 
-  describe(`[workbox-webpack-plugin] html-webpack-plugin and a single chunk`, function() {
-    it(`should work when called without any parameters`, function(done) {
+  describe(`[workbox-webpack-plugin] html-webpack-plugin and a single chunk`, function () {
+    it(`should work when called without any parameters`, function (done) {
       const outputDir = tempy.directory();
       const config = {
         mode: 'production',
@@ -425,16 +470,25 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
             swFile,
             entryPoint: 'injectManifest',
             expectedMethodCalls: {
-              precacheAndRoute: [[[{
-                revision: null,
-                url: /^entry1-[0-9a-f]{20}\.js$/,
-              }, {
-                revision: null,
-                url: /^entry2-[0-9a-f]{20}\.js$/,
-              }, {
-                revision: /^[0-9a-f]{32}$/,
-                url: 'index.html',
-              }], {}]],
+              precacheAndRoute: [
+                [
+                  [
+                    {
+                      revision: null,
+                      url: /^entry1-[0-9a-f]{20}\.js$/,
+                    },
+                    {
+                      revision: null,
+                      url: /^entry2-[0-9a-f]{20}\.js$/,
+                    },
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'index.html',
+                    },
+                  ],
+                  {},
+                ],
+              ],
             },
           });
 
@@ -446,8 +500,8 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
     });
   });
 
-  describe(`[workbox-webpack-plugin] copy-webpack-plugin and a single chunk`, function() {
-    it(`should work when called without any parameters`, function(done) {
+  describe(`[workbox-webpack-plugin] copy-webpack-plugin and a single chunk`, function () {
+    it(`should work when called without any parameters`, function (done) {
       const outputDir = tempy.directory();
       const config = {
         mode: 'production',
@@ -457,10 +511,14 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
           path: outputDir,
         },
         plugins: [
-          new CopyWebpackPlugin({patterns: [{
-            from: SRC_DIR,
-            to: outputDir,
-          }]}),
+          new CopyWebpackPlugin({
+            patterns: [
+              {
+                from: SRC_DIR,
+                to: outputDir,
+              },
+            ],
+          }),
           new InjectManifest({
             swSrc: SW_SRC,
             swDest: 'service-worker.js',
@@ -481,44 +539,49 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
             swFile,
             entryPoint: 'injectManifest',
             expectedMethodCalls: {
-              precacheAndRoute: [[[
-                {
-                  revision: /^[0-9a-f]{32}$/,
-                  url: 'images/example-jpeg.jpg',
-                },
-                {
-                  revision: /^[0-9a-f]{32}$/,
-                  url: 'images/web-fundamentals-icon192x192.png',
-                },
-                {
-                  revision: /^[0-9a-f]{32}$/,
-                  url: 'index.html',
-                },
-                {
-                  revision: /^[0-9a-f]{32}$/,
-                  url: 'page-1.html',
-                },
-                {
-                  revision: /^[0-9a-f]{32}$/,
-                  url: 'page-2.html',
-                },
-                {
-                  revision: /^[0-9a-f]{32}$/,
-                  url: 'splitChunksEntry.js',
-                },
-                {
-                  revision: /^[0-9a-f]{32}$/,
-                  url: 'styles/stylesheet-1.css',
-                },
-                {
-                  revision: /^[0-9a-f]{32}$/,
-                  url: 'styles/stylesheet-2.css',
-                },
-                {
-                  revision: /^[0-9a-f]{32}$/,
-                  url: 'webpackEntry.js',
-                },
-              ], {}]],
+              precacheAndRoute: [
+                [
+                  [
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'images/example-jpeg.jpg',
+                    },
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'images/web-fundamentals-icon192x192.png',
+                    },
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'index.html',
+                    },
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'page-1.html',
+                    },
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'page-2.html',
+                    },
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'splitChunksEntry.js',
+                    },
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'styles/stylesheet-1.css',
+                    },
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'styles/stylesheet-2.css',
+                    },
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'webpackEntry.js',
+                    },
+                  ],
+                  {},
+                ],
+              ],
             },
           });
 
@@ -530,8 +593,8 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
     });
   });
 
-  describe(`[workbox-webpack-plugin] Sourcemap manipulation`, function() {
-    it(`should update the sourcemap to account for manifest injection`, function(done) {
+  describe(`[workbox-webpack-plugin] Sourcemap manipulation`, function () {
+    it(`should update the sourcemap to account for manifest injection`, function (done) {
       const outputDir = tempy.directory();
       const config = {
         mode: 'production',
@@ -559,8 +622,17 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
           expect(files).to.have.length(4);
 
           const expectedSourcemap = await fse.readJSON(
-              upath.join(__dirname, '..', '..', 'static', 'expected-service-worker.js.map'));
-          const actualSourcemap = await fse.readJSON(upath.join(outputDir, 'service-worker.js.map'));
+            upath.join(
+              __dirname,
+              '..',
+              '..',
+              'static',
+              'expected-service-worker.js.map',
+            ),
+          );
+          const actualSourcemap = await fse.readJSON(
+            upath.join(outputDir, 'service-worker.js.map'),
+          );
 
           // The mappings will vary depending on the webpack version.
           delete expectedSourcemap.mappings;
@@ -572,10 +644,17 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
             swFile,
             entryPoint: 'injectManifest',
             expectedMethodCalls: {
-              precacheAndRoute: [[[{
-                revision: /^[0-9a-f]{32}$/,
-                url: 'webpackEntry.js',
-              }], {}]],
+              precacheAndRoute: [
+                [
+                  [
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'webpackEntry.js',
+                    },
+                  ],
+                  {},
+                ],
+              ],
             },
           });
 
@@ -586,7 +665,7 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
       });
     });
 
-    it(`should handle a custom output.sourceMapFilename`, function(done) {
+    it(`should handle a custom output.sourceMapFilename`, function (done) {
       const outputDir = tempy.directory();
 
       const sourceMapFilename = upath.join('subdir', '[file].map');
@@ -617,9 +696,17 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
           expect(files).to.have.length(4);
 
           const expectedSourcemap = await fse.readJSON(
-              upath.join(__dirname, '..', '..', 'static', 'expected-service-worker.js.map'));
+            upath.join(
+              __dirname,
+              '..',
+              '..',
+              'static',
+              'expected-service-worker.js.map',
+            ),
+          );
           const actualSourcemap = await fse.readJSON(
-              upath.join(outputDir, 'subdir', 'service-worker.js.map'));
+            upath.join(outputDir, 'subdir', 'service-worker.js.map'),
+          );
 
           // The mappings will vary depending on the webpack version.
           delete expectedSourcemap.mappings;
@@ -631,10 +718,17 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
             swFile,
             entryPoint: 'injectManifest',
             expectedMethodCalls: {
-              precacheAndRoute: [[[{
-                revision: /^[0-9a-f]{32}$/,
-                url: 'webpackEntry.js',
-              }], {}]],
+              precacheAndRoute: [
+                [
+                  [
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'webpackEntry.js',
+                    },
+                  ],
+                  {},
+                ],
+              ],
             },
           });
 
@@ -645,9 +739,15 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
       });
     });
 
-    it(`should not fail if the sourcemap is missing from the assets`, function(done) {
+    it(`should not fail if the sourcemap is missing from the assets`, function (done) {
       const outputDir = tempy.directory();
-      const swSrc = upath.join(__dirname, '..', '..', 'static', 'sw-src-missing-sourcemap.js');
+      const swSrc = upath.join(
+        __dirname,
+        '..',
+        '..',
+        'static',
+        'sw-src-missing-sourcemap.js',
+      );
 
       const config = {
         mode: 'development',
@@ -678,11 +778,124 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
             swFile,
             entryPoint: 'injectManifest',
             expectedMethodCalls: {
-              precacheAndRoute: [[[{
-                revision: /^[0-9a-f]{32}$/,
-                url: 'webpackEntry.js',
-              }], {}]],
+              precacheAndRoute: [
+                [
+                  [
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'webpackEntry.js',
+                    },
+                  ],
+                  {},
+                ],
+              ],
             },
+          });
+
+          done();
+        } catch (error) {
+          done(error);
+        }
+      });
+    });
+
+    // See https://github.com/GoogleChrome/workbox/issues/2729
+    it(`should produce valid JavaScript when eval-cheap-source-map and minimization are used`, function (done) {
+      const outputDir = tempy.directory();
+
+      const config = {
+        mode: 'development',
+        entry: upath.join(SRC_DIR, WEBPACK_ENTRY_FILENAME),
+        output: {
+          filename: WEBPACK_ENTRY_FILENAME,
+          path: outputDir,
+        },
+        devtool: 'eval-cheap-source-map',
+        optimization: {
+          minimize: true,
+        },
+        plugins: [
+          new InjectManifest({
+            swSrc: upath.join(
+              __dirname,
+              '..',
+              '..',
+              'static',
+              'module-import-sw.js',
+            ),
+            swDest: 'service-worker.js',
+          }),
+        ],
+      };
+
+      const compiler = webpack(config);
+      compiler.run(async (webpackError, stats) => {
+        const swFile = upath.join(outputDir, 'service-worker.js');
+        try {
+          webpackBuildCheck(webpackError, stats);
+
+          const files = await globby('**', {cwd: outputDir});
+          expect(files).to.have.length(2);
+
+          await validateServiceWorkerRuntime({
+            swFile,
+            entryPoint: 'injectManifest',
+            // We can't verify expectedMethodCalls here, since we're using
+            // a compiled ES module import, not the workbox-sw interfaces.
+            // This test just confirms that the compilation produces valid JS.
+          });
+
+          done();
+        } catch (error) {
+          done(error);
+        }
+      });
+    });
+
+    // See https://github.com/GoogleChrome/workbox/issues/2729
+    it(`should produce valid JavaScript when eval-cheap-source-map is used without minimization`, function (done) {
+      const outputDir = tempy.directory();
+
+      const config = {
+        mode: 'development',
+        entry: upath.join(SRC_DIR, WEBPACK_ENTRY_FILENAME),
+        output: {
+          filename: WEBPACK_ENTRY_FILENAME,
+          path: outputDir,
+        },
+        devtool: 'eval-cheap-source-map',
+        optimization: {
+          minimize: false,
+        },
+        plugins: [
+          new InjectManifest({
+            swSrc: upath.join(
+              __dirname,
+              '..',
+              '..',
+              'static',
+              'module-import-sw.js',
+            ),
+            swDest: 'service-worker.js',
+          }),
+        ],
+      };
+
+      const compiler = webpack(config);
+      compiler.run(async (webpackError, stats) => {
+        const swFile = upath.join(outputDir, 'service-worker.js');
+        try {
+          webpackBuildCheck(webpackError, stats);
+
+          const files = await globby('**', {cwd: outputDir});
+          expect(files).to.have.length(2);
+
+          await validateServiceWorkerRuntime({
+            swFile,
+            entryPoint: 'injectManifest',
+            // We can't verify expectedMethodCalls here, since we're using
+            // a compiled ES module import, not the workbox-sw interfaces.
+            // This test just confirms that the compilation produces valid JS.
           });
 
           done();
@@ -693,8 +906,8 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
     });
   });
 
-  describe(`[workbox-webpack-plugin] Filtering via include/exclude`, function() {
-    it(`should exclude .map and manifest.js files by default`, function(done) {
+  describe(`[workbox-webpack-plugin] Filtering via include/exclude`, function () {
+    it(`should exclude .map and manifest.js files by default`, function (done) {
       const outputDir = tempy.directory();
       const config = {
         mode: 'production',
@@ -728,16 +941,25 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
             swFile,
             entryPoint: 'injectManifest',
             expectedMethodCalls: {
-              precacheAndRoute: [[[{
-                revision: /^[0-9a-f]{32}$/,
-                url: 'manifest.json',
-              }, {
-                revision: /^[0-9a-f]{32}$/,
-                url: 'not-ignored.js',
-              }, {
-                revision: /^[0-9a-f]{32}$/,
-                url: 'webpackEntry.js',
-              }], {}]],
+              precacheAndRoute: [
+                [
+                  [
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'manifest.json',
+                    },
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'not-ignored.js',
+                    },
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'webpackEntry.js',
+                    },
+                  ],
+                  {},
+                ],
+              ],
             },
           });
 
@@ -748,7 +970,7 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
       });
     });
 
-    it(`should allow developers to override the default exclude filter`, function(done) {
+    it(`should allow developers to override the default exclude filter`, function (done) {
       const outputDir = tempy.directory();
       const config = {
         mode: 'production',
@@ -780,13 +1002,21 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
             swFile,
             entryPoint: 'injectManifest',
             expectedMethodCalls: {
-              precacheAndRoute: [[[{
-                revision: /^[0-9a-f]{32}$/,
-                url: 'webpackEntry.js',
-              }, {
-                revision: /^[0-9a-f]{32}$/,
-                url: 'webpackEntry.js.map',
-              }], {}]],
+              precacheAndRoute: [
+                [
+                  [
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'webpackEntry.js',
+                    },
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'webpackEntry.js.map',
+                    },
+                  ],
+                  {},
+                ],
+              ],
             },
           });
 
@@ -797,7 +1027,7 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
       });
     });
 
-    it(`should allow developers to allowlist via include`, function(done) {
+    it(`should allow developers to allowlist via include`, function (done) {
       const outputDir = tempy.directory();
       const config = {
         mode: 'production',
@@ -807,10 +1037,14 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
           path: outputDir,
         },
         plugins: [
-          new CopyWebpackPlugin({patterns: [{
-            from: SRC_DIR,
-            to: outputDir,
-          }]}),
+          new CopyWebpackPlugin({
+            patterns: [
+              {
+                from: SRC_DIR,
+                to: outputDir,
+              },
+            ],
+          }),
           new InjectManifest({
             swSrc: SW_SRC,
             swDest: 'service-worker.js',
@@ -832,16 +1066,25 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
             swFile,
             entryPoint: 'injectManifest',
             expectedMethodCalls: {
-              precacheAndRoute: [[[{
-                revision: /^[0-9a-f]{32}$/,
-                url: 'index.html',
-              }, {
-                revision: /^[0-9a-f]{32}$/,
-                url: 'page-1.html',
-              }, {
-                revision: /^[0-9a-f]{32}$/,
-                url: 'page-2.html',
-              }], {}]],
+              precacheAndRoute: [
+                [
+                  [
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'index.html',
+                    },
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'page-1.html',
+                    },
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'page-2.html',
+                    },
+                  ],
+                  {},
+                ],
+              ],
             },
           });
 
@@ -852,7 +1095,7 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
       });
     });
 
-    it(`should allow developers to combine the include and exclude filters`, function(done) {
+    it(`should allow developers to combine the include and exclude filters`, function (done) {
       const outputDir = tempy.directory();
       const config = {
         mode: 'production',
@@ -862,10 +1105,14 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
           path: outputDir,
         },
         plugins: [
-          new CopyWebpackPlugin({patterns: [{
-            from: SRC_DIR,
-            to: outputDir,
-          }]}),
+          new CopyWebpackPlugin({
+            patterns: [
+              {
+                from: SRC_DIR,
+                to: outputDir,
+              },
+            ],
+          }),
           new InjectManifest({
             swSrc: SW_SRC,
             swDest: 'service-worker.js',
@@ -888,13 +1135,21 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
             swFile,
             entryPoint: 'injectManifest',
             expectedMethodCalls: {
-              precacheAndRoute: [[[{
-                revision: /^[0-9a-f]{32}$/,
-                url: 'page-1.html',
-              }, {
-                revision: /^[0-9a-f]{32}$/,
-                url: 'page-2.html',
-              }], {}]],
+              precacheAndRoute: [
+                [
+                  [
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'page-1.html',
+                    },
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'page-2.html',
+                    },
+                  ],
+                  {},
+                ],
+              ],
             },
           });
 
@@ -906,8 +1161,8 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
     });
   });
 
-  describe(`[workbox-webpack-plugin] swDest variations`, function() {
-    it(`should work when swDest is an absolute path`, function(done) {
+  describe(`[workbox-webpack-plugin] swDest variations`, function () {
+    it(`should work when swDest is an absolute path`, function (done) {
       const outputDir = tempy.directory();
       const config = {
         mode: 'production',
@@ -937,10 +1192,17 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
             swFile,
             entryPoint: 'injectManifest',
             expectedMethodCalls: {
-              precacheAndRoute: [[[{
-                revision: /^[0-9a-f]{32}$/,
-                url: 'webpackEntry.js',
-              }], {}]],
+              precacheAndRoute: [
+                [
+                  [
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'webpackEntry.js',
+                    },
+                  ],
+                  {},
+                ],
+              ],
             },
           });
 
@@ -952,8 +1214,8 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
     });
   });
 
-  describe(`[workbox-webpack-plugin] Reporting webpack warnings`, function() {
-    it(`should warn when when passed a non-existent chunk`, function(done) {
+  describe(`[workbox-webpack-plugin] Reporting webpack warnings`, function () {
+    it(`should warn when when passed a non-existent chunk`, function (done) {
       const outputDir = tempy.directory();
       const config = {
         mode: 'production',
@@ -991,12 +1253,17 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
             swFile,
             entryPoint: 'injectManifest',
             expectedMethodCalls: {
-              precacheAndRoute: [[[
-                {
-                  revision: null,
-                  url: /^entry1-[0-9a-f]{20}\.js$/,
-                },
-              ], {}]],
+              precacheAndRoute: [
+                [
+                  [
+                    {
+                      revision: null,
+                      url: /^entry1-[0-9a-f]{20}\.js$/,
+                    },
+                  ],
+                  {},
+                ],
+              ],
             },
           });
 
@@ -1007,7 +1274,7 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
       });
     });
 
-    it(`should add maximumFileSizeToCacheInBytes warnings to compilation.warnings`, function(done) {
+    it(`should add maximumFileSizeToCacheInBytes warnings to compilation.warnings`, function (done) {
       const outputDir = tempy.directory();
       const config = {
         mode: 'production',
@@ -1019,10 +1286,14 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
           path: outputDir,
         },
         plugins: [
-          new CopyWebpackPlugin({patterns: [{
-            from: SRC_DIR,
-            to: outputDir,
-          }]}),
+          new CopyWebpackPlugin({
+            patterns: [
+              {
+                from: SRC_DIR,
+                to: outputDir,
+              },
+            ],
+          }),
           new InjectManifest({
             swSrc: SW_SRC,
             swDest: 'service-worker.js',
@@ -1053,44 +1324,49 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
             swFile,
             entryPoint: 'injectManifest',
             expectedMethodCalls: {
-              precacheAndRoute: [[[
-                {
-                  revision: null,
-                  url: /^entry1-[0-9a-f]{20}\.js$/,
-                },
-                {
-                  revision: /^[0-9a-f]{32}$/,
-                  url: 'images/web-fundamentals-icon192x192.png',
-                },
-                {
-                  revision: /^[0-9a-f]{32}$/,
-                  url: 'index.html',
-                },
-                {
-                  revision: /^[0-9a-f]{32}$/,
-                  url: 'page-1.html',
-                },
-                {
-                  revision: /^[0-9a-f]{32}$/,
-                  url: 'page-2.html',
-                },
-                {
-                  revision: /^[0-9a-f]{32}$/,
-                  url: 'splitChunksEntry.js',
-                },
-                {
-                  revision: /^[0-9a-f]{32}$/,
-                  url: 'styles/stylesheet-1.css',
-                },
-                {
-                  revision: /^[0-9a-f]{32}$/,
-                  url: 'styles/stylesheet-2.css',
-                },
-                {
-                  revision: /^[0-9a-f]{32}$/,
-                  url: 'webpackEntry.js',
-                },
-              ], {}]],
+              precacheAndRoute: [
+                [
+                  [
+                    {
+                      revision: null,
+                      url: /^entry1-[0-9a-f]{20}\.js$/,
+                    },
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'images/web-fundamentals-icon192x192.png',
+                    },
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'index.html',
+                    },
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'page-1.html',
+                    },
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'page-2.html',
+                    },
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'splitChunksEntry.js',
+                    },
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'styles/stylesheet-1.css',
+                    },
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'styles/stylesheet-2.css',
+                    },
+                    {
+                      revision: /^[0-9a-f]{32}$/,
+                      url: 'webpackEntry.js',
+                    },
+                  ],
+                  {},
+                ],
+              ],
             },
           });
 
@@ -1102,8 +1378,8 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
     });
   });
 
-  describe(`[workbox-webpack-plugin] Customizing output paths and names`, function() {
-    it(`should honor publicPath`, function(done) {
+  describe(`[workbox-webpack-plugin] Customizing output paths and names`, function () {
+    it(`should honor publicPath`, function (done) {
       const outputDir = tempy.directory();
       const publicPath = '/testing/';
       const config = {
@@ -1137,12 +1413,17 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
             swFile,
             entryPoint: 'injectManifest',
             expectedMethodCalls: {
-              precacheAndRoute: [[[
-                {
-                  revision: null,
-                  url: /^\/testing\/entry1-[0-9a-f]{20}\.js$/,
-                },
-              ], {}]],
+              precacheAndRoute: [
+                [
+                  [
+                    {
+                      revision: null,
+                      url: /^\/testing\/entry1-[0-9a-f]{20}\.js$/,
+                    },
+                  ],
+                  {},
+                ],
+              ],
             },
           });
 
@@ -1154,11 +1435,17 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
     });
   });
 
-  describe(`[workbox-webpack-plugin] WASM Code`, function() {
+  describe(`[workbox-webpack-plugin] WASM Code`, function () {
     // See https://github.com/GoogleChrome/workbox/issues/1916
-    it(`should support projects that bundle WASM code`, function(done) {
+    it(`should support projects that bundle WASM code`, function (done) {
       const outputDir = tempy.directory();
-      const srcDir = upath.join(__dirname, '..', '..', 'static', 'wasm-project');
+      const srcDir = upath.join(
+        __dirname,
+        '..',
+        '..',
+        'static',
+        'wasm-project',
+      );
       const config = {
         mode: 'production',
         entry: {
@@ -1198,8 +1485,8 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
     });
   });
 
-  describe(`[workbox-webpack-plugin] Manifest transformations`, function() {
-    it(`should use dontCacheBustURLsMatching`, function(done) {
+  describe(`[workbox-webpack-plugin] Manifest transformations`, function () {
+    it(`should use dontCacheBustURLsMatching`, function (done) {
       const outputDir = tempy.directory();
       const config = {
         mode: 'production',
@@ -1230,10 +1517,17 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
             swFile,
             entryPoint: 'injectManifest',
             expectedMethodCalls: {
-              precacheAndRoute: [[[{
-                url: /^main\.[0-9a-f]{20}\.js$/,
-                revision: null,
-              }], {}]],
+              precacheAndRoute: [
+                [
+                  [
+                    {
+                      url: /^main\.[0-9a-f]{20}\.js$/,
+                      revision: null,
+                    },
+                  ],
+                  {},
+                ],
+              ],
             },
           });
 
@@ -1244,7 +1538,7 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
       });
     });
 
-    it(`should use modifyURLPrefix`, function(done) {
+    it(`should use modifyURLPrefix`, function (done) {
       const outputDir = tempy.directory();
       const config = {
         mode: 'production',
@@ -1278,10 +1572,17 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
             swFile,
             entryPoint: 'injectManifest',
             expectedMethodCalls: {
-              precacheAndRoute: [[[{
-                revision: null,
-                url: /^https:\/\/example\.org\/main\.[0-9a-f]{20}\.js/,
-              }], {}]],
+              precacheAndRoute: [
+                [
+                  [
+                    {
+                      revision: null,
+                      url: /^https:\/\/example\.org\/main\.[0-9a-f]{20}\.js/,
+                    },
+                  ],
+                  {},
+                ],
+              ],
             },
           });
 
@@ -1292,9 +1593,15 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
       });
     });
 
-    it(`should use webpackCompilationPlugins with DefinePlugin`, function(done) {
+    it(`should use webpackCompilationPlugins with DefinePlugin`, function (done) {
       const prefix = 'replaced-by-define-plugin';
-      const swSrc = upath.join(__dirname, '..', '..', 'static', 'sw-src-define-plugin.js');
+      const swSrc = upath.join(
+        __dirname,
+        '..',
+        '..',
+        'static',
+        'sw-src-define-plugin.js',
+      );
       const outputDir = tempy.directory();
       const config = {
         mode: 'production',
@@ -1329,10 +1636,17 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
             entryPoint: 'injectManifest',
             expectedMethodCalls: {
               setCacheNameDetails: [[{prefix}]],
-              precacheAndRoute: [[[{
-                revision: null,
-                url: /^main\.[0-9a-f]{20}\.js$/,
-              }], {}]],
+              precacheAndRoute: [
+                [
+                  [
+                    {
+                      revision: null,
+                      url: /^main\.[0-9a-f]{20}\.js$/,
+                    },
+                  ],
+                  {},
+                ],
+              ],
             },
           });
 
@@ -1343,7 +1657,7 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
       });
     });
 
-    it(`should use manifestTransforms`, function(done) {
+    it(`should use manifestTransforms`, function (done) {
       const outputDir = tempy.directory();
       const warningMessage = 'test warning';
       const config = {
@@ -1357,24 +1671,26 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
           new InjectManifest({
             swSrc: SW_SRC,
             swDest: 'service-worker.js',
-            manifestTransforms: [(manifest, compilation) => {
-              expect(manifest).to.have.lengthOf(1);
-              expect(manifest[0].size).to.eql(959);
-              expect(manifest[0].url.startsWith('main.')).to.be.true;
-              expect(manifest[0].revision).to.be.null;
-              expect(compilation).to.exist;
+            manifestTransforms: [
+              (manifest, compilation) => {
+                expect(manifest).to.have.lengthOf(1);
+                expect(manifest[0].size).to.eql(959);
+                expect(manifest[0].url.startsWith('main.')).to.be.true;
+                expect(manifest[0].revision).to.be.null;
+                expect(compilation).to.exist;
 
-              manifest = manifest.map((entry) => {
-                entry.url += '-suffix';
-                entry.revision = null;
-                return entry;
-              });
+                manifest = manifest.map((entry) => {
+                  entry.url += '-suffix';
+                  entry.revision = null;
+                  return entry;
+                });
 
-              return {
-                manifest,
-                warnings: [warningMessage],
-              };
-            }],
+                return {
+                  manifest,
+                  warnings: [warningMessage],
+                };
+              },
+            ],
           }),
         ],
       };
@@ -1395,10 +1711,17 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
             swFile,
             entryPoint: 'injectManifest',
             expectedMethodCalls: {
-              precacheAndRoute: [[[{
-                revision: null,
-                url: /^main.[0-9a-f]{20}\.js-suffix$/,
-              }], {}]],
+              precacheAndRoute: [
+                [
+                  [
+                    {
+                      revision: null,
+                      url: /^main.[0-9a-f]{20}\.js-suffix$/,
+                    },
+                  ],
+                  {},
+                ],
+              ],
             },
           });
 
@@ -1410,8 +1733,8 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
     });
   });
 
-  describe(`[workbox-webpack-plugin] TypeScript compilation`, function() {
-    it(`should rename a swSrc with a .ts extension to .js`, function(done) {
+  describe(`[workbox-webpack-plugin] TypeScript compilation`, function () {
+    it(`should rename a swSrc with a .ts extension to .js`, function (done) {
       const outputDir = tempy.directory();
       const config = {
         mode: 'production',
@@ -1443,9 +1766,9 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
     });
   });
 
-  describe(`[workbox-webpack-plugin] Multiple invocation scenarios`, function() {
+  describe(`[workbox-webpack-plugin] Multiple invocation scenarios`, function () {
     // See https://github.com/GoogleChrome/workbox/issues/2158
-    it(`should support multiple compilations using the same plugin instance`, async function() {
+    it(`should support multiple compilations using the same plugin instance`, async function () {
       const outputDir = tempy.directory();
       const config = {
         mode: 'production',
@@ -1494,7 +1817,7 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
       }
     });
 
-    it(`should only log once per invocation when using multiple plugin instances`, async function() {
+    it(`should only log once per invocation when using multiple plugin instances`, async function () {
       const outputDir = tempy.directory();
       const config = {
         mode: 'production',
@@ -1548,9 +1871,9 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
     });
   });
 
-  describe(`[workbox-webpack-plugin] Multiple plugin instances`, function() {
+  describe(`[workbox-webpack-plugin] Multiple plugin instances`, function () {
     // See https://github.com/GoogleChrome/workbox/issues/2181
-    it(`should not list the swDest from one plugin in the other's manifest`, function(done) {
+    it(`should not list the swDest from one plugin in the other's manifest`, function (done) {
       const outputDir = tempy.directory();
       const config = {
         mode: 'production',
@@ -1588,10 +1911,17 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
             swFile: sw1File,
             entryPoint: 'injectManifest',
             expectedMethodCalls: {
-              precacheAndRoute: [[[{
-                revision: null,
-                url: /^main\.[0-9a-f]{20}\.js$/,
-              }], {}]],
+              precacheAndRoute: [
+                [
+                  [
+                    {
+                      revision: null,
+                      url: /^main\.[0-9a-f]{20}\.js$/,
+                    },
+                  ],
+                  {},
+                ],
+              ],
             },
           });
 
@@ -1599,10 +1929,17 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
             swFile: sw2File,
             entryPoint: 'injectManifest',
             expectedMethodCalls: {
-              precacheAndRoute: [[[{
-                revision: null,
-                url: /^main\.[0-9a-f]{20}\.js$/,
-              }], {}]],
+              precacheAndRoute: [
+                [
+                  [
+                    {
+                      revision: null,
+                      url: /^main\.[0-9a-f]{20}\.js$/,
+                    },
+                  ],
+                  {},
+                ],
+              ],
             },
           });
 
@@ -1614,8 +1951,8 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
     });
   });
 
-  describe(`[workbox-webpack-plugin] Manifest injection in development mode`, function() {
-    it(`should produce valid, parsable JavaScript`, function(done) {
+  describe(`[workbox-webpack-plugin] Manifest injection in development mode`, function () {
+    it(`should produce valid, parsable JavaScript`, function (done) {
       const outputDir = tempy.directory();
       const config = {
         mode: 'development',
@@ -1647,10 +1984,17 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
             swFile: swFile,
             entryPoint: 'injectManifest',
             expectedMethodCalls: {
-              precacheAndRoute: [[[{
-                revision: null,
-                url: /^main\.[0-9a-f]{20}\.js$/,
-              }], {}]],
+              precacheAndRoute: [
+                [
+                  [
+                    {
+                      revision: null,
+                      url: /^main\.[0-9a-f]{20}\.js$/,
+                    },
+                  ],
+                  {},
+                ],
+              ],
             },
           });
 
@@ -1662,8 +2006,8 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
     });
   });
 
-  describe(`[workbox-webpack-plugin] Non-compilation scenarios`, function() {
-    it(`should error when compileSrc is false and webpackCompilationPlugins is used`, function(done) {
+  describe(`[workbox-webpack-plugin] Non-compilation scenarios`, function () {
+    it(`should warn when compileSrc is false and webpackCompilationPlugins is used`, function (done) {
       const outputDir = tempy.directory();
 
       const config = {
@@ -1677,7 +2021,13 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
           new InjectManifest({
             compileSrc: false,
             swDest: 'injected-manifest.json',
-            swSrc: upath.join(__dirname, '..', '..', 'static', 'injected-manifest.json'),
+            swSrc: upath.join(
+              __dirname,
+              '..',
+              '..',
+              'static',
+              'injected-manifest.json',
+            ),
             webpackCompilationPlugins: [{}],
           }),
         ],
@@ -1688,11 +2038,10 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
         try {
           expect(webpackError).not.to.exist;
           const statsJson = stats.toJson();
-          expect(statsJson.warnings).to.be.empty;
-          expect(statsJson.errors).to.have.members([
-            `Please check your InjectManifest plugin configuration:\n"webpackCompilationPlugins" is not allowed`,
+          expect(statsJson.errors).to.be.empty;
+          expect(statsJson.warnings).to.have.members([
+            'compileSrc is false, so the webpackCompilationPlugins option will be ignored.',
           ]);
-
           done();
         } catch (error) {
           done(error);
@@ -1700,7 +2049,7 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
       });
     });
 
-    it(`should support injecting a manifest into a JSON file`, function(done) {
+    it(`should support injecting a manifest into a JSON file`, function (done) {
       const outputDir = tempy.directory();
 
       const config = {
@@ -1714,7 +2063,13 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
           new InjectManifest({
             compileSrc: false,
             swDest: 'injected-manifest.json',
-            swSrc: upath.join(__dirname, '..', '..', 'static', 'injected-manifest.json'),
+            swSrc: upath.join(
+              __dirname,
+              '..',
+              '..',
+              'static',
+              'injected-manifest.json',
+            ),
           }),
         ],
       };
@@ -1727,11 +2082,15 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
           const files = await globby('**', {cwd: outputDir});
           expect(files).to.have.length(2);
 
-          const manifest = await fse.readJSON(upath.join(outputDir, 'injected-manifest.json'));
-          expect(manifest).to.matchPattern([{
-            revision: null,
-            url: /^main\.[0-9a-f]{20}\.js$/,
-          }]);
+          const manifest = await fse.readJSON(
+            upath.join(outputDir, 'injected-manifest.json'),
+          );
+          expect(manifest).to.matchPattern([
+            {
+              revision: null,
+              url: /^main\.[0-9a-f]{20}\.js$/,
+            },
+          ]);
 
           done();
         } catch (error) {
@@ -1740,7 +2099,7 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
       });
     });
 
-    it(`should support injecting a manifest into a CJS module`, function(done) {
+    it(`should support injecting a manifest into a CJS module`, function (done) {
       const outputDir = tempy.directory();
 
       const config = {
@@ -1754,7 +2113,13 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
           new InjectManifest({
             compileSrc: false,
             swDest: 'injected-manifest.js',
-            swSrc: upath.join(__dirname, '..', '..', 'static', 'injected-manifest.js'),
+            swSrc: upath.join(
+              __dirname,
+              '..',
+              '..',
+              'static',
+              'injected-manifest.js',
+            ),
           }),
         ],
       };
@@ -1767,11 +2132,16 @@ describe(`[workbox-webpack-plugin] InjectManifest with webpack v4`, function() {
           const files = await globby('**', {cwd: outputDir});
           expect(files).to.have.length(2);
 
-          const manifest = require(upath.join(outputDir, 'injected-manifest.js'));
-          expect(manifest).to.matchPattern([{
-            revision: null,
-            url: /^main\.[0-9a-f]{20}\.js$/,
-          }]);
+          const manifest = require(upath.join(
+            outputDir,
+            'injected-manifest.js',
+          ));
+          expect(manifest).to.matchPattern([
+            {
+              revision: null,
+              url: /^main\.[0-9a-f]{20}\.js$/,
+            },
+          ]);
 
           done();
         } catch (error) {

@@ -7,7 +7,8 @@
 */
 
 const {getPackages} = require('../../../../gulp-tasks/utils/get-packages');
-const {needsTranspile, queueTranspile} = require('../../../../gulp-tasks/transpile-typescript').functions;
+const {needsTranspile, queueTranspile} =
+  require('../../../../gulp-tasks/transpile-typescript').functions;
 const {nodeResolve} = require('@rollup/plugin-node-resolve');
 const {rollup} = require('rollup');
 const commonjs = require('@rollup/plugin-commonjs');
@@ -40,7 +41,7 @@ async function handler(req, res) {
       plugins: [
         multiEntry(),
         nodeResolve({
-          moduleDirectories: ['packages'],
+          moduleDirectories: ['packages', 'node_modules'],
         }),
         // TODO(philipwalton): some of our shared testing helpers use commonjs
         // so we have to support this for the time being.

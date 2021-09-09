@@ -7,21 +7,21 @@
 */
 
 import {CacheTimestampsModel} from 'workbox-expiration/models/CacheTimestampsModel.mjs';
-import {DBWrapper} from 'workbox-core/_private/DBWrapper.mjs';
+import {openDB} from 'idb';
 
-
-describe(`CacheTimestampsModel`, function() {
+describe(`CacheTimestampsModel`, function () {
   const sandbox = sinon.createSandbox();
-  const db = new DBWrapper('workbox-expiration', 1, {
-    onupgradeneeded: CacheTimestampsModel.prototype._handleUpgrade,
-  });
+  let db = null;
 
-  beforeEach(async function() {
+  beforeEach(async function () {
     sandbox.restore();
+    db = await openDB('workbox-expiration', 1, {
+      upgrade: CacheTimestampsModel.prototype._upgradeDb,
+    });
     await db.clear('cache-entries');
   });
 
-  after(function() {
+  after(function () {
     sandbox.restore();
   });
 
@@ -90,16 +90,16 @@ describe(`CacheTimestampsModel`, function() {
     return db;
   };
 
-  describe(`constructor`, function() {
-    it(`should constructor with a cacheName`, function() {
+  describe(`constructor`, function () {
+    it(`should constructor with a cacheName`, function () {
       new CacheTimestampsModel('test-cache');
     });
 
     // TODO Test bad input
   });
 
-  describe(`expireEntries()`, function() {
-    it(`should remove and return entries with timestamps below minTimestamp`, async function() {
+  describe(`expireEntries()`, function () {
+    it(`should remove and return entries with timestamps below minTimestamp`, async function () {
       await populateDb();
 
       const model1 = new CacheTimestampsModel('cache-one');
@@ -112,13 +112,11 @@ describe(`CacheTimestampsModel`, function() {
 
       const model2 = new CacheTimestampsModel('cache-two');
       const removedEntries2 = await model2.expireEntries(9);
-      expect(removedEntries2).to.deep.equal([
-        `${location.origin}/3`,
-      ]);
+      expect(removedEntries2).to.deep.equal([`${location.origin}/3`]);
       expect(await db.count('cache-entries')).to.equal(7);
     });
 
-    it(`should remove and return the oldest entries greater than maxCount`, async function() {
+    it(`should remove and return the oldest entries greater than maxCount`, async function () {
       await populateDb();
 
       const model1 = new CacheTimestampsModel('cache-one');
@@ -139,7 +137,7 @@ describe(`CacheTimestampsModel`, function() {
       expect(await db.count('cache-entries')).to.equal(5);
     });
 
-    it(`should work with minTimestamp and maxCount`, async function() {
+    it(`should work with minTimestamp and maxCount`, async function () {
       await populateDb();
 
       const model1 = new CacheTimestampsModel('cache-one');
@@ -157,13 +155,11 @@ describe(`CacheTimestampsModel`, function() {
 
       // This example tests maxCount being more restrictive.
       const removedEntries2 = await model2.expireEntries(5, 2);
-      expect(removedEntries2).to.deep.equal([
-        `${location.origin}/3`,
-      ]);
+      expect(removedEntries2).to.deep.equal([`${location.origin}/3`]);
       expect(await db.count('cache-entries')).to.equal(6);
     });
 
-    it(`should return an empty array if nothing matches`, async function() {
+    it(`should return an empty array if nothing matches`, async function () {
       await populateDb();
 
       const model = new CacheTimestampsModel('cache-one');
@@ -175,8 +171,8 @@ describe(`CacheTimestampsModel`, function() {
     });
   });
 
-  describe(`setTimestamp`, async function() {
-    it(`should put entries in the database`, async function() {
+  describe(`setTimestamp`, async function () {
+    it(`should put entries in the database`, async function () {
       const model1 = new CacheTimestampsModel('cache-one');
       const model2 = new CacheTimestampsModel('cache-two');
 
@@ -207,8 +203,8 @@ describe(`CacheTimestampsModel`, function() {
     });
   });
 
-  describe(`getTimestamp`, async function() {
-    it(`should get an entry from the database by 'url'`, async function() {
+  describe(`getTimestamp`, async function () {
+    it(`should get an entry from the database by 'url'`, async function () {
       await populateDb();
 
       const model1 = new CacheTimestampsModel('cache-one');

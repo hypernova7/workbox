@@ -6,195 +6,30 @@
   https://opensource.org/licenses/MIT.
 */
 
-import {DBWrapper} from 'workbox-core/_private/DBWrapper.mjs';
-import {deleteDatabase} from 'workbox-core/_private/deleteDatabase.mjs';
 import {QueueStore} from 'workbox-background-sync/lib/QueueStore.mjs';
 import {StorableRequest} from 'workbox-background-sync/lib/StorableRequest.mjs';
+import {QueueDb} from 'workbox-background-sync/lib/QueueDb.mjs';
+import {openDB} from 'idb';
 
+describe(`QueueStore`, function () {
+  let db = null;
 
-describe(`QueueStore`, function() {
-  const db = new DBWrapper('workbox-background-sync', 3, {
-    onupgradeneeded: QueueStore.prototype._upgradeDb,
-  });
-
-  beforeEach(async function() {
+  beforeEach(async function () {
+    db = await openDB('workbox-background-sync', 3, {
+      upgrade: QueueDb.prototype._upgradeDb,
+    });
     await db.clear('requests');
   });
 
-  describe(`constructor`, function() {
-    it(`should associate the queue name with a Queue instance`, function() {
+  describe(`constructor`, function () {
+    it(`should associate the queue name with a Queue instance`, function () {
       const queueStore = new QueueStore('foo');
       expect(queueStore._queueName).to.equal('foo');
     });
-
-    it(`should create a DBWrapper instance that references the _upgradeDb method`, function() {
-      const queueStore = new QueueStore('foo');
-      expect(queueStore._db._onupgradeneeded).to.equal(queueStore._upgradeDb);
-    });
   });
 
-  describe(`_upgradeDb`, function() {
-    const v3Entry = {
-      queueName: 'a',
-      metadata: {
-        one: '1',
-        two: '2',
-      },
-      timestamp: 123,
-      requestData: {
-        url: `${location.origin}/one`,
-        requestInit: {
-          mode: 'cors',
-        },
-      },
-    };
-
-    it(`should handle upgrading from no previous version`, async function() {
-      const dbv3 = new DBWrapper('workbox-background-sync-from-v3', 3, {
-        onupgradeneeded: QueueStore.prototype._upgradeDb,
-      });
-
-      let entries = await dbv3.getAll('requests');
-      expect(entries.length).to.equal(0);
-
-      await dbv3.add('requests', v3Entry);
-
-      entries = await dbv3.getAll('requests');
-      expect(entries[0].id).to.equal(1);
-      expect(entries[0].timestamp).to.equal(v3Entry.timestamp);
-      expect(entries[0].metadata).to.deep.equal(v3Entry.metadata);
-      expect(entries[0].queueName).to.equal(v3Entry.queueName);
-      expect(entries[0].requestData).to.deep.equal(v3Entry.requestData);
-
-      await deleteDatabase('workbox-background-sync-from-v3');
-    });
-
-    it(`should handle upgrading from version 1`, async function() {
-      await deleteDatabase('workbox-background-sync-from-v1');
-
-      const dbv1 = new DBWrapper('workbox-background-sync-from-v1', 1, {
-        onupgradeneeded: (event) => event.target.result
-            .createObjectStore('requests', {autoIncrement: true})
-            .createIndex('queueName', 'queueName', {unique: false}),
-      });
-
-      // Add entries in v1 format.
-      await dbv1.add('requests', {
-        queueName: 'a',
-        storableRequest: {
-          url: `${location.origin}/one`,
-          timestamp: 123,
-          requestInit: {
-            method: 'POST',
-            mode: 'cors',
-            headers: {
-              'x-foo': 'bar',
-              'x-qux': 'baz',
-            },
-          },
-        },
-      });
-      await dbv1.add('requests', {
-        queueName: 'b',
-        storableRequest: {
-          url: `${location.origin}/two`,
-          timestamp: 234,
-          requestInit: {
-            mode: 'cors',
-          },
-        },
-      });
-      await dbv1.add('requests', {
-        queueName: 'a',
-        storableRequest: {
-          url: `${location.origin}/three`,
-          timestamp: 345,
-          requestInit: {},
-        },
-      });
-
-      const dbv3 = new DBWrapper('workbox-background-sync-from-v1', 3, {
-        onupgradeneeded: QueueStore.prototype._upgradeDb,
-      });
-
-      let entries = await dbv3.getAll('requests');
-      expect(entries.length).to.equal(0);
-
-      await dbv3.add('requests', v3Entry);
-
-      entries = await dbv3.getAll('requests');
-      expect(entries[0].id).to.equal(1);
-      expect(entries[0].timestamp).to.equal(v3Entry.timestamp);
-      expect(entries[0].metadata).to.deep.equal(v3Entry.metadata);
-      expect(entries[0].queueName).to.equal(v3Entry.queueName);
-      expect(entries[0].requestData).to.deep.equal(v3Entry.requestData);
-
-      await deleteDatabase('workbox-background-sync-from-v2');
-    });
-
-    it(`should handle upgrading from version 2`, async function() {
-      await deleteDatabase('workbox-background-sync-from-v2');
-
-      const dbv2 = new DBWrapper('workbox-background-sync-from-v2', 2, {
-        onupgradeneeded: (event) => event.target.result
-            .createObjectStore('requests', {
-              autoIncrement: true,
-              keyPath: 'id',
-            })
-            .createIndex('queueName', 'queueName', {unique: false}),
-      });
-
-      // Add entries in v2 format.
-      await dbv2.add('requests', {
-        queueName: 'a',
-        metadata: {one: '1', two: '2'},
-        storableRequest: {
-          url: `${location.origin}/one`,
-          timestamp: 123,
-          requestInit: {
-            method: 'POST',
-            mode: 'cors',
-            headers: {
-              'x-foo': 'bar',
-              'x-qux': 'baz',
-            },
-          },
-        },
-      });
-      await dbv2.add('requests', {
-        queueName: 'b',
-        metadata: {three: '3', four: '4'},
-        storableRequest: {
-          url: `${location.origin}/two`,
-          timestamp: 234,
-          requestInit: {
-            mode: 'cors',
-          },
-        },
-      });
-
-      const dbv3 = new DBWrapper('workbox-background-sync-from-v2', 3, {
-        onupgradeneeded: QueueStore.prototype._upgradeDb,
-      });
-
-      let entries = await dbv3.getAll('requests');
-      expect(entries.length).to.equal(0);
-
-      await dbv3.add('requests', v3Entry);
-
-      entries = await dbv3.getAll('requests');
-      expect(entries[0].id).to.equal(1);
-      expect(entries[0].timestamp).to.equal(v3Entry.timestamp);
-      expect(entries[0].metadata).to.deep.equal(v3Entry.metadata);
-      expect(entries[0].queueName).to.equal(v3Entry.queueName);
-      expect(entries[0].requestData).to.deep.equal(v3Entry.requestData);
-
-      await deleteDatabase('workbox-background-sync-from-v2');
-    });
-  });
-
-  describe(`pushEntry`, function() {
-    it(`should append an entry to IDB with the right queue name`, async function() {
+  describe(`pushEntry`, function () {
+    it(`should append an entry to IDB with the right queue name`, async function () {
       const queueStore1 = new QueueStore('a');
       const queueStore2 = new QueueStore('b');
 
@@ -263,7 +98,7 @@ describe(`QueueStore`, function() {
       expect(entries[4].metadata).to.deep.equal({name: 'meta5'});
     });
 
-    it(`throws if not given an entry object`, function() {
+    it(`throws if not given an entry object`, function () {
       if (process.env.NODE_ENV === 'production') this.skip();
 
       return expectError(async () => {
@@ -272,7 +107,7 @@ describe(`QueueStore`, function() {
       }, 'incorrect-type');
     });
 
-    it(`throws if not given an entry object with requestData`, function() {
+    it(`throws if not given an entry object with requestData`, function () {
       if (process.env.NODE_ENV === 'production') this.skip();
 
       return expectError(async () => {
@@ -282,8 +117,8 @@ describe(`QueueStore`, function() {
     });
   });
 
-  describe(`unshiftEntry`, function() {
-    it(`should prepend an entry to IDB with the right queue name and ID`, async function() {
+  describe(`unshiftEntry`, function () {
+    it(`should prepend an entry to IDB with the right queue name and ID`, async function () {
       const queueStore1 = new QueueStore('a');
       const queueStore2 = new QueueStore('b');
 
@@ -352,7 +187,7 @@ describe(`QueueStore`, function() {
       expect(entries[4].requestData.url).to.equal(`${location.origin}/one`);
     });
 
-    it(`throws if not given an entry object`, function() {
+    it(`throws if not given an entry object`, function () {
       if (process.env.NODE_ENV === 'production') this.skip();
 
       return expectError(async () => {
@@ -361,7 +196,7 @@ describe(`QueueStore`, function() {
       }, 'incorrect-type');
     });
 
-    it(`throws if not given an entry object with requestData`, function() {
+    it(`throws if not given an entry object with requestData`, function () {
       if (process.env.NODE_ENV === 'production') this.skip();
 
       return expectError(async () => {
@@ -371,8 +206,8 @@ describe(`QueueStore`, function() {
     });
   });
 
-  describe(`shiftEntry`, function() {
-    it(`should remove and return the first entry in IDB with the matching queue name`, async function() {
+  describe(`shiftEntry`, function () {
+    it(`should remove and return the first entry in IDB with the matching queue name`, async function () {
       const queueStore1 = new QueueStore('a');
       const queueStore2 = new QueueStore('b');
 
@@ -444,8 +279,8 @@ describe(`QueueStore`, function() {
     });
   });
 
-  describe(`popEntry`, function() {
-    it(`should remove and return the last entry in IDB with the matching queue name`, async function() {
+  describe(`popEntry`, function () {
+    it(`should remove and return the last entry in IDB with the matching queue name`, async function () {
       const queueStore1 = new QueueStore('a');
       const queueStore2 = new QueueStore('b');
 
@@ -525,8 +360,8 @@ describe(`QueueStore`, function() {
     });
   });
 
-  describe(`getAll`, function() {
-    it(`should return all entries in IDB with the right queue name`, async function() {
+  describe(`getAll`, function () {
+    it(`should return all entries in IDB with the right queue name`, async function () {
       const queueStore1 = new QueueStore('a');
       const queueStore2 = new QueueStore('b');
 
@@ -614,8 +449,8 @@ describe(`QueueStore`, function() {
     });
   });
 
-  describe(`delete`, function() {
-    it(`should delete an entry for the given ID`, async function() {
+  describe(`delete`, function () {
+    it(`should delete an entry for the given ID`, async function () {
       const queueStore = new QueueStore('a');
 
       const sr1 = await StorableRequest.fromRequest(new Request('/one'));
